@@ -35,5 +35,4 @@ type Transaction struct {
 	Amount        sql.NullFloat64
 	DescriptionID sql.NullInt64
 	CodeID        sql.NullInt64
-	Foreign       interface{}
 }

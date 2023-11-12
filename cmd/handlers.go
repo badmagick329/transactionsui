@@ -4,16 +4,15 @@ import (
 	"log"
 	"net/http"
 	"transactionsui/database"
-	"transactionsui/internal/controller"
+	"transactionsui/internal/dbhandler"
 )
 
 func codeHandler(w http.ResponseWriter, r *http.Request) {
-	codes, err := controller.GetTransactionCodesDemo(r.Context())
+	db := dbhandler.New()
+	q := database.New(db.DB)
+	codes, err := q.GetTransactionCodes(r.Context())
 	if err != nil {
 		log.Fatal(err)
-	}
-	for _, code := range codes {
-		log.Printf("%d: %s", code.ID, code.Code.String)
 	}
 	type PageData struct {
 		Title string
@@ -22,6 +21,24 @@ func codeHandler(w http.ResponseWriter, r *http.Request) {
 	data := PageData{
 		Title: "Hello",
 		Codes: codes,
+	}
+	tmpl.Execute(w, data)
+}
+
+func transactionsHandler(w http.ResponseWriter, r *http.Request) {
+	db := dbhandler.New()
+	q := database.New(db.DB)
+	transactions, err := q.GetAllTransactions(r.Context())
+	if err != nil {
+		log.Fatal(err)
+	}
+	type PageData struct {
+		Title        string
+		Transactions []database.GetAllTransactionsRow
+	}
+	data := PageData{
+		Title:        "Hello",
+		Transactions: transactions[:10],
 	}
 	tmpl.Execute(w, data)
 }

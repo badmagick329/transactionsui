@@ -20,5 +20,6 @@ CREATE TABLE IF NOT EXISTS transactions (
   amount REAL,
   description_id INTEGER,
   code_id INTEGER,
-  FOREIGN KEY(description_id) REFERENCES descriptions(id) ON DELETE CASCADE FOREIGN KEY(code_id) REFERENCES codes(id) ON DELETE CASCADE
+  FOREIGN KEY(description_id) REFERENCES descriptions(id) ON DELETE CASCADE,
+  FOREIGN KEY(code_id) REFERENCES codes(id) ON DELETE CASCADE
 );

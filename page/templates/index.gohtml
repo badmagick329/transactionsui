@@ -1,14 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-theme="coffee" lang="en">
   <head>
     <title>{{ .Title }}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/static/css/style.css" rel="stylesheet">
+    <script type="text/javascript" src="/static/js/script.js"></script>
   </head>
-  <body class="bg-slate-800 text-white min-h-screen">
-    {{ range .Codes }}
-    <p>{{ .Code.String }}</p>
-    {{ end }}
+  <body class="flex flex-col bg-base-100 text-neutral-content min-h-screen items-center">
+    <div class="flex flex-wrap w-full px-2 justify-center">
+      <input id="description-search"
+             class="w-full md:w-1/3 lg:w-1/4 my-2 mx-4 p-2 bg-base-200 rounded-lg"
+             type="text"
+             placeholder="Search by description"
+             autocomplete="off"
+             onkeyup="filterTransactions()">
+    </div>
+    <div class="flex flex-wrap w-full px-2 justify-center">
+      {{ range .Transactions }}
+      <div class="flex flex-col w-full md:w-1/3 lg:w-1/4 items-center text-center my-2 mx-4 p-2 bg-base-200 rounded-lg"
+           data-description="{{ .DescriptionText.String }}"
+           data-alias="{{ .AliasText.String }}"
+           data-transaction-card>
+        <div class="flex w-full justify-center gap-x-2">
+          <span class="text-xl font-semibold">{{ .Date.String }}</span>
+          <span class="text-xl font-bold text-warning">£{{ .Amount.Float64 }}</span>
+          <span class="text-info">{{ .Code.String }}</span>
+        </div>
+        <div class="flex">
+          {{ if .AliasText.Valid }}
+          <span class="italic font-thin">{{ .DescriptionText.String }}</span>
+          <span class="font-semibold">{{ .AliasText.String }}</span>
+        {{ else }}
+          <span class="italic font-semibold">{{ .DescriptionText.String }}</span>
+          {{ end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
   </body>
 </html>

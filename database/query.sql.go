@@ -7,10 +7,133 @@ package database
 
 import (
 	"context"
+	"database/sql"
 )
 
+const getAlias = `-- name: GetAlias :one
+SELECT
+  id, alias_text
+FROM
+  aliases
+WHERE
+  alias_text = ?
+`
+
+func (q *Queries) GetAlias(ctx context.Context, aliasText sql.NullString) (Alias, error) {
+	row := q.db.QueryRowContext(ctx, getAlias, aliasText)
+	var i Alias
+	err := row.Scan(&i.ID, &i.AliasText)
+	return i, err
+}
+
+const getAliases = `-- name: GetAliases :many
+SELECT
+  id, alias_text
+FROM
+  aliases
+`
+
+func (q *Queries) GetAliases(ctx context.Context) ([]Alias, error) {
+	rows, err := q.db.QueryContext(ctx, getAliases)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Alias
+	for rows.Next() {
+		var i Alias
+		if err := rows.Scan(&i.ID, &i.AliasText); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllTransactions = `-- name: GetAllTransactions :many
+SELECT
+  t.id as transactions_id,
+  t.date as date,
+  t.amount,
+  tc.code,
+  d.description_text,
+  a.alias_text
+FROM
+  transactions t
+  JOIN tran_codes tc ON tc.id = t.code_id
+  JOIN descriptions d ON d.id = t.description_id
+  LEFT JOIN alias_desc ad ON ad.description_id = d.id
+  LEFT JOIN aliases a ON a.id = ad.alias_id
+ORDER BY
+  t.date DESC
+`
+
+type GetAllTransactionsRow struct {
+	TransactionsID  int64
+	Date            sql.NullString
+	Amount          sql.NullFloat64
+	Code            sql.NullString
+	DescriptionText sql.NullString
+	AliasText       sql.NullString
+}
+
+func (q *Queries) GetAllTransactions(ctx context.Context) ([]GetAllTransactionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTransactions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllTransactionsRow
+	for rows.Next() {
+		var i GetAllTransactionsRow
+		if err := rows.Scan(
+			&i.TransactionsID,
+			&i.Date,
+			&i.Amount,
+			&i.Code,
+			&i.DescriptionText,
+			&i.AliasText,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTransactionCode = `-- name: GetTransactionCode :one
+SELECT
+  id, code
+FROM
+  tran_codes
+WHERE
+  code = ?
+`
+
+func (q *Queries) GetTransactionCode(ctx context.Context, code sql.NullString) (TranCode, error) {
+	row := q.db.QueryRowContext(ctx, getTransactionCode, code)
+	var i TranCode
+	err := row.Scan(&i.ID, &i.Code)
+	return i, err
+}
+
 const getTransactionCodes = `-- name: GetTransactionCodes :many
-SELECT id, code FROM tran_codes
+SELECT
+  id, code
+FROM
+  tran_codes
 `
 
 func (q *Queries) GetTransactionCodes(ctx context.Context) ([]TranCode, error) {
