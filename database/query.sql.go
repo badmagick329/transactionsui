@@ -10,39 +10,31 @@ import (
 	"database/sql"
 )
 
-const getAlias = `-- name: GetAlias :one
-SELECT
-  id, alias_text
-FROM
-  aliases
-WHERE
-  alias_text = ?
-`
-
-func (q *Queries) GetAlias(ctx context.Context, aliasText sql.NullString) (Alias, error) {
-	row := q.db.QueryRowContext(ctx, getAlias, aliasText)
-	var i Alias
-	err := row.Scan(&i.ID, &i.AliasText)
-	return i, err
-}
-
 const getAliases = `-- name: GetAliases :many
 SELECT
-  id, alias_text
+  a.alias_text,
+  d.description_text
 FROM
-  aliases
+  aliases a
+  JOIN alias_desc ad ON ad.alias_id = a.id
+  JOIN descriptions d ON d.id = ad.description_id
 `
 
-func (q *Queries) GetAliases(ctx context.Context) ([]Alias, error) {
+type GetAliasesRow struct {
+	AliasText       sql.NullString
+	DescriptionText sql.NullString
+}
+
+func (q *Queries) GetAliases(ctx context.Context) ([]GetAliasesRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAliases)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Alias
+	var items []GetAliasesRow
 	for rows.Next() {
-		var i Alias
-		if err := rows.Scan(&i.ID, &i.AliasText); err != nil {
+		var i GetAliasesRow
+		if err := rows.Scan(&i.AliasText, &i.DescriptionText); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -62,16 +54,15 @@ SELECT
   t.date as date,
   t.amount,
   tc.code,
-  d.description_text,
-  a.alias_text
+  d.description_text
 FROM
   transactions t
   JOIN tran_codes tc ON tc.id = t.code_id
   JOIN descriptions d ON d.id = t.description_id
-  LEFT JOIN alias_desc ad ON ad.description_id = d.id
-  LEFT JOIN aliases a ON a.id = ad.alias_id
 ORDER BY
-  t.date DESC
+  t.date DESC,
+  t.amount DESC,
+  t.id DESC
 `
 
 type GetAllTransactionsRow struct {
@@ -80,7 +71,6 @@ type GetAllTransactionsRow struct {
 	Amount          sql.NullFloat64
 	Code            sql.NullString
 	DescriptionText sql.NullString
-	AliasText       sql.NullString
 }
 
 func (q *Queries) GetAllTransactions(ctx context.Context) ([]GetAllTransactionsRow, error) {
@@ -98,7 +88,6 @@ func (q *Queries) GetAllTransactions(ctx context.Context) ([]GetAllTransactionsR
 			&i.Amount,
 			&i.Code,
 			&i.DescriptionText,
-			&i.AliasText,
 		); err != nil {
 			return nil, err
 		}
