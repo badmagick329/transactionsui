@@ -1,9 +1,21 @@
+interface InputValue {
+    text: string;
+    num: number;
+    none: boolean;
+}
+interface PageValue {
+    text: string;
+    none: boolean;
+}
+
+type ComparisonFunc = (a: InputValue, b: PageValue) => boolean;
+
 interface InputValues {
-    description: string | null;
-    minAmount: number | null;
-    maxAmount: number | null;
-    startDate: string | null;
-    endDate: string | null;
+    description: InputValue;
+    minAmount: InputValue;
+    maxAmount: InputValue;
+    startDate: InputValue;
+    endDate: InputValue;
 }
 
 interface InputMatches {
@@ -14,15 +26,14 @@ interface InputMatches {
     endDate: boolean;
 }
 
-
 let transactionCards: NodeListOf<Element>;
 
 let inputValues: InputValues = {
-    description: null,
-    minAmount: null,
-    maxAmount: null,
-    startDate: null,
-    endDate: null,
+    description: { text: "", num: 0, none: true },
+    minAmount: { text: "", num: 0, none: true },
+    maxAmount: { text: "", num: 0, none: true },
+    startDate: { text: "", num: 0, none: true },
+    endDate: { text: "", num: 0, none: true },
 };
 
 let inputMatches: InputMatches = {
@@ -34,17 +45,31 @@ let inputMatches: InputMatches = {
 };
 
 function main() {
-    const minAmountInput = document.querySelector<HTMLInputElement>(
-        "#min-amount-search"
-    );
+    const minAmountInput =
+        document.querySelector<HTMLInputElement>("#min-amount-search");
     if (minAmountInput !== null) {
-        minAmountInput.addEventListener("change", minAmountChange);
+        minAmountInput.addEventListener("keyup", minAmountChange);
     }
-    const maxAmountInput = document.querySelector<HTMLInputElement>(
-        "#max-amount-search"
-    );
+    const maxAmountInput =
+        document.querySelector<HTMLInputElement>("#max-amount-search");
     if (maxAmountInput !== null) {
-        maxAmountInput.addEventListener("change", maxAmountChange);
+        maxAmountInput.addEventListener("keyup", maxAmountChange);
+    }
+    const descriptionInput = document.querySelector<HTMLInputElement>(
+        "#description-search"
+    );
+    if (descriptionInput !== null) {
+        descriptionInput.addEventListener("keyup", descriptionChange);
+    }
+    const startDateInput =
+        document.querySelector<HTMLInputElement>("#start-date-search");
+    if (startDateInput !== null) {
+        startDateInput.addEventListener("keyup", startDateChange);
+    }
+    const endDateInput =
+        document.querySelector<HTMLInputElement>("#end-date-search");
+    if (endDateInput !== null) {
+        endDateInput.addEventListener("keyup", endDateChange);
     }
     transactionCards = document.querySelectorAll("[data-transaction-card]");
 }
@@ -79,39 +104,83 @@ function updateMatches(
     inputValues: InputValues,
     inputMatches: InputMatches
 ) {
-    const amount = parseFloat(transactionCard.dataset.amount ?? "");
-    if (isNaN(amount)) {
-        inputMatches.minAmount = true;
-        inputMatches.maxAmount = true;
-    } else {
-        inputMatches.minAmount =
-            inputValues.minAmount === null || amount >= inputValues.minAmount;
-        inputMatches.maxAmount =
-            inputValues.maxAmount === null || amount <= inputValues.maxAmount;
-    }
-    inputMatches.startDate =
-        inputValues.startDate === null ||
-        transactionCard.dataset.date === undefined ||
-        transactionCard.dataset.date >= inputValues.startDate;
-    inputMatches.endDate =
-        inputValues.endDate === null ||
-        transactionCard.dataset.date === undefined ||
-        transactionCard.dataset.date <= inputValues.endDate;
-    const descriptionSearchElement = document.querySelector<HTMLInputElement>(
-        "#description-search"
-    );
-    if (descriptionSearchElement !== null) {
-        let descriptionText = transactionCard.dataset.description ?? "";
-        let aliasText = transactionCard.dataset.alias ?? "";
-        if (aliasText !== "") {
-            descriptionText += " " + aliasText;
+    inputMatches.minAmount = runMatch(
+        inputValues.minAmount,
+        wrapPageValue(transactionCard.dataset.amount),
+        (inputValue, pageValue) => {
+            const amount = parseFloat(pageValue.text);
+            if (isNaN(amount)) {
+                return true;
+            }
+            return amount >= inputValue.num;
         }
-        inputMatches.description =
-            inputValues.description === null ||
-            descriptionText
-                .toLowerCase()
-                .includes(inputValues.description.toLowerCase());
+    );
+    inputMatches.maxAmount = runMatch(
+        inputValues.maxAmount,
+        wrapPageValue(transactionCard.dataset.amount),
+        (inputValue, pageValue) => {
+            const amount = parseFloat(pageValue.text);
+            if (isNaN(amount)) {
+                return true;
+            }
+            return amount <= inputValue.num;
+        }
+    );
+    inputMatches.startDate = runMatch(
+        inputValues.startDate,
+        wrapPageValue(transactionCard.dataset.date),
+        (inputValue, pageValue) => {
+            return pageValue.text >= inputValue.text;
+        }
+    );
+    inputMatches.endDate = runMatch(
+        inputValues.endDate,
+        wrapPageValue(transactionCard.dataset.date),
+        (inputValue, pageValue) => {
+            return pageValue.text <= inputValue.text;
+        }
+    );
+    let descriptionText = transactionCard.dataset.description ?? "";
+    let aliasText = transactionCard.dataset.alias ?? "";
+    if (aliasText !== "") {
+        descriptionText += " " + aliasText;
     }
+    inputMatches.description = runMatch(
+        inputValues.description,
+        { text: descriptionText, none: false },
+        (inputValue, pageValue) => {
+            return pageValue.text
+                .toLowerCase()
+                .includes(inputValue.text.toLowerCase());
+        }
+    );
+}
+
+function runMatch(
+    inputValue: InputValue,
+    pageValue: PageValue,
+    comparison: ComparisonFunc
+) {
+    if (inputValue.none) {
+        return true;
+    }
+    if (pageValue.none) {
+        return true;
+    }
+    return comparison(inputValue, pageValue);
+}
+
+function wrapPageValue(v: string | undefined): PageValue {
+    if (v === undefined) {
+        return {
+            text: "",
+            none: true,
+        };
+    }
+    return {
+        text: v,
+        none: false,
+    };
 }
 
 function descriptionChange() {
@@ -119,14 +188,19 @@ function descriptionChange() {
         "#description-search"
     );
     if (descriptionSearchElement !== null) {
-        inputValues.description = descriptionSearchElement.value;
+        inputValues.description = {
+            text: descriptionSearchElement.value,
+            num: 0,
+            none: false,
+        };
+    } else {
+        inputValues.description = { ...inputValues.description, none: true };
     }
-    if (inputValues.description === null) {
+    if (inputValues.description.none) {
         return;
     }
     filterCards();
 }
-
 
 function minAmountChange() {
     const minAmountElement =
@@ -134,11 +208,11 @@ function minAmountChange() {
     const minAmountElementValue = minAmountElement?.value ?? "";
     const minAmount = parseFloat(minAmountElementValue);
     if (isNaN(minAmount)) {
-        inputValues.minAmount = null;
+        inputValues.minAmount = { ...inputValues.minAmount, none: true };
     } else {
-        inputValues.minAmount = minAmount;
+        inputValues.minAmount = { text: "", num: minAmount, none: false };
     }
-    if (inputValues.minAmount === null) {
+    if (inputValues.minAmount.none) {
         return;
     }
     filterCards();
@@ -150,11 +224,11 @@ function maxAmountChange() {
     const maxAmountElementValue = maxAmountElement?.value ?? "";
     const maxAmount = parseFloat(maxAmountElementValue);
     if (isNaN(maxAmount)) {
-        inputValues.maxAmount = null;
+        inputValues.maxAmount = { ...inputValues.maxAmount, none: true };
     } else {
-        inputValues.maxAmount = maxAmount;
+        inputValues.maxAmount = { text: "", num: maxAmount, none: false };
     }
-    if (inputValues.maxAmount === null) {
+    if (inputValues.maxAmount.none) {
         return;
     }
     filterCards();
@@ -163,9 +237,17 @@ function maxAmountChange() {
 function startDateChange() {
     const startDateElement =
         document.querySelector<HTMLInputElement>("#start-date-search");
-    const startDateElementValue = startDateElement?.value ?? "";
-    inputValues.startDate = startDateElementValue;
-    if (inputValues.startDate === null) {
+    const startDateElementValue = startDateElement?.value;
+    if (startDateElementValue === undefined) {
+        inputValues.startDate = { ...inputValues.startDate, none: true };
+    } else {
+        inputValues.startDate = {
+            text: startDateElementValue,
+            num: 0,
+            none: false,
+        };
+    }
+    if (inputValues.startDate.none) {
         return;
     }
     filterCards();
@@ -174,9 +256,17 @@ function startDateChange() {
 function endDateChange() {
     const endDateElement =
         document.querySelector<HTMLInputElement>("#start-date-search");
-    const endDateElementValue = endDateElement?.value ?? "";
-    inputValues.endDate = endDateElementValue;
-    if (inputValues.endDate === null) {
+    const endDateElementValue = endDateElement?.value;
+    if (endDateElementValue === undefined) {
+        inputValues.endDate = { ...inputValues.endDate, none: true };
+    } else {
+        inputValues.endDate = {
+            text: endDateElementValue,
+            num: 0,
+            none: false,
+        };
+    }
+    if (inputValues.endDate.none) {
         return;
     }
     filterCards();

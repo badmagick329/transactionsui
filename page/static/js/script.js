@@ -1,11 +1,22 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var transactionCards;
 var inputValues = {
-    description: null,
-    minAmount: null,
-    maxAmount: null,
-    startDate: null,
-    endDate: null,
+    description: { text: "", num: 0, none: true },
+    minAmount: { text: "", num: 0, none: true },
+    maxAmount: { text: "", num: 0, none: true },
+    startDate: { text: "", num: 0, none: true },
+    endDate: { text: "", num: 0, none: true },
 };
 var inputMatches = {
     description: false,
@@ -17,11 +28,23 @@ var inputMatches = {
 function main() {
     var minAmountInput = document.querySelector("#min-amount-search");
     if (minAmountInput !== null) {
-        minAmountInput.addEventListener("change", minAmountChange);
+        minAmountInput.addEventListener("keyup", minAmountChange);
     }
     var maxAmountInput = document.querySelector("#max-amount-search");
     if (maxAmountInput !== null) {
-        maxAmountInput.addEventListener("change", maxAmountChange);
+        maxAmountInput.addEventListener("keyup", maxAmountChange);
+    }
+    var descriptionInput = document.querySelector("#description-search");
+    if (descriptionInput !== null) {
+        descriptionInput.addEventListener("keyup", descriptionChange);
+    }
+    var startDateInput = document.querySelector("#start-date-search");
+    if (startDateInput !== null) {
+        startDateInput.addEventListener("keyup", startDateChange);
+    }
+    var endDateInput = document.querySelector("#end-date-search");
+    if (endDateInput !== null) {
+        endDateInput.addEventListener("keyup", endDateChange);
     }
     transactionCards = document.querySelectorAll("[data-transaction-card]");
 }
@@ -48,46 +71,72 @@ function cardMatches(transactionCard) {
         inputMatches.endDate);
 }
 function updateMatches(transactionCard, inputValues, inputMatches) {
-    var _a, _b, _c;
-    var amount = parseFloat((_a = transactionCard.dataset.amount) !== null && _a !== void 0 ? _a : "");
-    if (isNaN(amount)) {
-        inputMatches.minAmount = true;
-        inputMatches.maxAmount = true;
-    }
-    else {
-        inputMatches.minAmount =
-            inputValues.minAmount === null || amount >= inputValues.minAmount;
-        inputMatches.maxAmount =
-            inputValues.maxAmount === null || amount <= inputValues.maxAmount;
-    }
-    inputMatches.startDate =
-        inputValues.startDate === null ||
-            transactionCard.dataset.date === undefined ||
-            transactionCard.dataset.date >= inputValues.startDate;
-    inputMatches.endDate =
-        inputValues.endDate === null ||
-            transactionCard.dataset.date === undefined ||
-            transactionCard.dataset.date <= inputValues.endDate;
-    var descriptionSearchElement = document.querySelector("#description-search");
-    if (descriptionSearchElement !== null) {
-        var descriptionText = (_b = transactionCard.dataset.description) !== null && _b !== void 0 ? _b : "";
-        var aliasText = (_c = transactionCard.dataset.alias) !== null && _c !== void 0 ? _c : "";
-        if (aliasText !== "") {
-            descriptionText += " " + aliasText;
+    var _a, _b;
+    inputMatches.minAmount = runMatch(inputValues.minAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
+        var amount = parseFloat(pageValue.text);
+        if (isNaN(amount)) {
+            return true;
         }
-        inputMatches.description =
-            inputValues.description === null ||
-                descriptionText
-                    .toLowerCase()
-                    .includes(inputValues.description.toLowerCase());
+        return amount >= inputValue.num;
+    });
+    inputMatches.maxAmount = runMatch(inputValues.maxAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
+        var amount = parseFloat(pageValue.text);
+        if (isNaN(amount)) {
+            return true;
+        }
+        return amount <= inputValue.num;
+    });
+    inputMatches.startDate = runMatch(inputValues.startDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
+        return pageValue.text >= inputValue.text;
+    });
+    inputMatches.endDate = runMatch(inputValues.endDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
+        return pageValue.text <= inputValue.text;
+    });
+    var descriptionText = (_a = transactionCard.dataset.description) !== null && _a !== void 0 ? _a : "";
+    var aliasText = (_b = transactionCard.dataset.alias) !== null && _b !== void 0 ? _b : "";
+    if (aliasText !== "") {
+        descriptionText += " " + aliasText;
     }
+    inputMatches.description = runMatch(inputValues.description, { text: descriptionText, none: false }, function (inputValue, pageValue) {
+        return pageValue.text
+            .toLowerCase()
+            .includes(inputValue.text.toLowerCase());
+    });
+}
+function runMatch(inputValue, pageValue, comparison) {
+    if (inputValue.none) {
+        return true;
+    }
+    if (pageValue.none) {
+        return true;
+    }
+    return comparison(inputValue, pageValue);
+}
+function wrapPageValue(v) {
+    if (v === undefined) {
+        return {
+            text: "",
+            none: true,
+        };
+    }
+    return {
+        text: v,
+        none: false,
+    };
 }
 function descriptionChange() {
     var descriptionSearchElement = document.querySelector("#description-search");
     if (descriptionSearchElement !== null) {
-        inputValues.description = descriptionSearchElement.value;
+        inputValues.description = {
+            text: descriptionSearchElement.value,
+            num: 0,
+            none: false,
+        };
     }
-    if (inputValues.description === null) {
+    else {
+        inputValues.description = __assign(__assign({}, inputValues.description), { none: true });
+    }
+    if (inputValues.description.none) {
         return;
     }
     filterCards();
@@ -98,12 +147,12 @@ function minAmountChange() {
     var minAmountElementValue = (_a = minAmountElement === null || minAmountElement === void 0 ? void 0 : minAmountElement.value) !== null && _a !== void 0 ? _a : "";
     var minAmount = parseFloat(minAmountElementValue);
     if (isNaN(minAmount)) {
-        inputValues.minAmount = null;
+        inputValues.minAmount = __assign(__assign({}, inputValues.minAmount), { none: true });
     }
     else {
-        inputValues.minAmount = minAmount;
+        inputValues.minAmount = { text: "", num: minAmount, none: false };
     }
-    if (inputValues.minAmount === null) {
+    if (inputValues.minAmount.none) {
         return;
     }
     filterCards();
@@ -114,32 +163,48 @@ function maxAmountChange() {
     var maxAmountElementValue = (_a = maxAmountElement === null || maxAmountElement === void 0 ? void 0 : maxAmountElement.value) !== null && _a !== void 0 ? _a : "";
     var maxAmount = parseFloat(maxAmountElementValue);
     if (isNaN(maxAmount)) {
-        inputValues.maxAmount = null;
+        inputValues.maxAmount = __assign(__assign({}, inputValues.maxAmount), { none: true });
     }
     else {
-        inputValues.maxAmount = maxAmount;
+        inputValues.maxAmount = { text: "", num: maxAmount, none: false };
     }
-    if (inputValues.maxAmount === null) {
+    if (inputValues.maxAmount.none) {
         return;
     }
     filterCards();
 }
 function startDateChange() {
-    var _a;
     var startDateElement = document.querySelector("#start-date-search");
-    var startDateElementValue = (_a = startDateElement === null || startDateElement === void 0 ? void 0 : startDateElement.value) !== null && _a !== void 0 ? _a : "";
-    inputValues.startDate = startDateElementValue;
-    if (inputValues.startDate === null) {
+    var startDateElementValue = startDateElement === null || startDateElement === void 0 ? void 0 : startDateElement.value;
+    if (startDateElementValue === undefined) {
+        inputValues.startDate = __assign(__assign({}, inputValues.startDate), { none: true });
+    }
+    else {
+        inputValues.startDate = {
+            text: startDateElementValue,
+            num: 0,
+            none: false,
+        };
+    }
+    if (inputValues.startDate.none) {
         return;
     }
     filterCards();
 }
 function endDateChange() {
-    var _a;
     var endDateElement = document.querySelector("#start-date-search");
-    var endDateElementValue = (_a = endDateElement === null || endDateElement === void 0 ? void 0 : endDateElement.value) !== null && _a !== void 0 ? _a : "";
-    inputValues.endDate = endDateElementValue;
-    if (inputValues.endDate === null) {
+    var endDateElementValue = endDateElement === null || endDateElement === void 0 ? void 0 : endDateElement.value;
+    if (endDateElementValue === undefined) {
+        inputValues.endDate = __assign(__assign({}, inputValues.endDate), { none: true });
+    }
+    else {
+        inputValues.endDate = {
+            text: endDateElementValue,
+            num: 0,
+            none: false,
+        };
+    }
+    if (inputValues.endDate.none) {
         return;
     }
     filterCards();
