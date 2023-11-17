@@ -83,24 +83,24 @@ function cardMatches(transactionCard) {
 }
 function updateMatches(transactionCard, inputValues, inputMatches) {
     var _a, _b;
-    inputMatches.minAmount = runMatch(inputValues.minAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
+    inputMatches.minAmount = updateMatch(inputValues.minAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
         var amount = parseFloat(pageValue.text);
         if (isNaN(amount)) {
             return true;
         }
         return amount >= inputValue.num;
     });
-    inputMatches.maxAmount = runMatch(inputValues.maxAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
+    inputMatches.maxAmount = updateMatch(inputValues.maxAmount, wrapPageValue(transactionCard.dataset.amount), function (inputValue, pageValue) {
         var amount = parseFloat(pageValue.text);
         if (isNaN(amount)) {
             return true;
         }
         return amount <= inputValue.num;
     });
-    inputMatches.startDate = runMatch(inputValues.startDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
+    inputMatches.startDate = updateMatch(inputValues.startDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
         return pageValue.text >= inputValue.text;
     });
-    inputMatches.endDate = runMatch(inputValues.endDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
+    inputMatches.endDate = updateMatch(inputValues.endDate, wrapPageValue(transactionCard.dataset.date), function (inputValue, pageValue) {
         return pageValue.text <= inputValue.text;
     });
     var descriptionText = (_a = transactionCard.dataset.description) !== null && _a !== void 0 ? _a : "";
@@ -108,13 +108,13 @@ function updateMatches(transactionCard, inputValues, inputMatches) {
     if (aliasText !== "") {
         descriptionText += " " + aliasText;
     }
-    inputMatches.description = runMatch(inputValues.description, { text: descriptionText, none: false }, function (inputValue, pageValue) {
+    inputMatches.description = updateMatch(inputValues.description, { text: descriptionText, none: false }, function (inputValue, pageValue) {
         return pageValue.text
             .toLowerCase()
             .includes(inputValue.text.toLowerCase());
     });
 }
-function runMatch(inputValue, pageValue, comparison) {
+function updateMatch(inputValue, pageValue, comparison) {
     if (inputValue.none) {
         return true;
     }
@@ -187,7 +187,7 @@ function maxAmountChange() {
 function startDateChange() {
     var startDateElement = document.querySelector("#start-date-search");
     var startDateElementValue = startDateElement === null || startDateElement === void 0 ? void 0 : startDateElement.value;
-    if (startDateElementValue === undefined) {
+    if (startDateElementValue === undefined || startDateElementValue === "") {
         inputValues.startDate = __assign(__assign({}, inputValues.startDate), { none: true });
     }
     else {
@@ -203,9 +203,9 @@ function startDateChange() {
     runUpdates();
 }
 function endDateChange() {
-    var endDateElement = document.querySelector("#start-date-search");
+    var endDateElement = document.querySelector("#end-date-search");
     var endDateElementValue = endDateElement === null || endDateElement === void 0 ? void 0 : endDateElement.value;
-    if (endDateElementValue === undefined) {
+    if (endDateElementValue === undefined || endDateElementValue === "") {
         inputValues.endDate = __assign(__assign({}, inputValues.endDate), { none: true });
     }
     else {

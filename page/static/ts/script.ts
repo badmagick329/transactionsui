@@ -63,7 +63,7 @@ function main() {
     startDateInput.addEventListener("change", startDateChange);
     const endDateInput =
         document.querySelector<HTMLInputElement>("#end-date-search")!;
-    endDateInput.addEventListener("change", endDateChange)!;
+    endDateInput.addEventListener("change", endDateChange);
     transactionCards = document.querySelectorAll("[data-transaction-card]");
     sumAmountElement =
         document.querySelector<HTMLSpanElement>("span#sum-amount")!;
@@ -115,7 +115,7 @@ function updateMatches(
     inputValues: InputValues,
     inputMatches: InputMatches
 ) {
-    inputMatches.minAmount = runMatch(
+    inputMatches.minAmount = updateMatch(
         inputValues.minAmount,
         wrapPageValue(transactionCard.dataset.amount),
         (inputValue, pageValue) => {
@@ -126,7 +126,7 @@ function updateMatches(
             return amount >= inputValue.num;
         }
     );
-    inputMatches.maxAmount = runMatch(
+    inputMatches.maxAmount = updateMatch(
         inputValues.maxAmount,
         wrapPageValue(transactionCard.dataset.amount),
         (inputValue, pageValue) => {
@@ -137,14 +137,14 @@ function updateMatches(
             return amount <= inputValue.num;
         }
     );
-    inputMatches.startDate = runMatch(
+    inputMatches.startDate = updateMatch(
         inputValues.startDate,
         wrapPageValue(transactionCard.dataset.date),
         (inputValue, pageValue) => {
             return pageValue.text >= inputValue.text;
         }
     );
-    inputMatches.endDate = runMatch(
+    inputMatches.endDate = updateMatch(
         inputValues.endDate,
         wrapPageValue(transactionCard.dataset.date),
         (inputValue, pageValue) => {
@@ -156,7 +156,7 @@ function updateMatches(
     if (aliasText !== "") {
         descriptionText += " " + aliasText;
     }
-    inputMatches.description = runMatch(
+    inputMatches.description = updateMatch(
         inputValues.description,
         { text: descriptionText, none: false },
         (inputValue, pageValue) => {
@@ -167,7 +167,7 @@ function updateMatches(
     );
 }
 
-function runMatch(
+function updateMatch(
     inputValue: InputValue,
     pageValue: PageValue,
     comparison: ComparisonFunc
@@ -249,7 +249,7 @@ function startDateChange() {
     const startDateElement =
         document.querySelector<HTMLInputElement>("#start-date-search");
     const startDateElementValue = startDateElement?.value;
-    if (startDateElementValue === undefined) {
+    if (startDateElementValue === undefined || startDateElementValue === "") {
         inputValues.startDate = { ...inputValues.startDate, none: true };
     } else {
         inputValues.startDate = {
@@ -266,9 +266,9 @@ function startDateChange() {
 
 function endDateChange() {
     const endDateElement =
-        document.querySelector<HTMLInputElement>("#start-date-search");
+        document.querySelector<HTMLInputElement>("#end-date-search");
     const endDateElementValue = endDateElement?.value;
-    if (endDateElementValue === undefined) {
+    if (endDateElementValue === undefined || endDateElementValue === "") {
         inputValues.endDate = { ...inputValues.endDate, none: true };
     } else {
         inputValues.endDate = {
