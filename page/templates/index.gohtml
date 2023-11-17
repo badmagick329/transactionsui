@@ -13,8 +13,7 @@
              class="w-full md:w-1/3 lg:w-1/4 my-2 mx-4 p-2 bg-base-200 rounded-lg"
              type="text"
              placeholder="Search by description"
-             autocomplete="off"
-             onkeyup="descriptionChange()">
+             autocomplete="off">
       <input id="min-amount-search"
              class="w-full md:w-1/3 lg:w-1/4 my-2 mx-4 p-2 bg-base-200 rounded-lg"
              type="number"
@@ -29,14 +28,18 @@
              class="w-full md:w-1/3 lg:w-1/4 my-2 mx-4 p-2 bg-base-200 rounded-lg"
              type="date"
              placeholder="Search by start date"
-             autocomplete="off"
-             onkeyup="startDateChange()">
+             autocomplete="off">
       <input id="end-date-search"
              class="w-full md:w-1/3 lg:w-1/4 my-2 mx-4 p-2 bg-base-200 rounded-lg"
              type="date"
              placeholder="Search by end date"
-             autocomplete="off"
-             onkeyup="endDateChange()">
+             autocomplete="off">
+    </div>
+    <div class="flex flex-wrap w-full px-2 justify-center">
+      <div id="sum-box" class="flex p-2 font-semibold text-xl">
+        <span>Sum: £</span>
+        <span id="sum-amount"></span>
+      </div>
     </div>
     <div class="flex flex-wrap w-full px-2 justify-center">
       {{ range .Transactions }}

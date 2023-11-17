@@ -11,6 +11,9 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 var transactionCards;
+var sumBox;
+var sumAmountElement;
+var sumAmount = 0;
 var inputValues = {
     description: { text: "", num: 0, none: true },
     minAmount: { text: "", num: 0, none: true },
@@ -27,28 +30,35 @@ var inputMatches = {
 };
 function main() {
     var minAmountInput = document.querySelector("#min-amount-search");
-    if (minAmountInput !== null) {
-        minAmountInput.addEventListener("keyup", minAmountChange);
-    }
+    minAmountInput.addEventListener("keyup", minAmountChange);
     var maxAmountInput = document.querySelector("#max-amount-search");
-    if (maxAmountInput !== null) {
-        maxAmountInput.addEventListener("keyup", maxAmountChange);
-    }
+    maxAmountInput.addEventListener("keyup", maxAmountChange);
     var descriptionInput = document.querySelector("#description-search");
-    if (descriptionInput !== null) {
-        descriptionInput.addEventListener("keyup", descriptionChange);
-    }
+    descriptionInput.addEventListener("keyup", descriptionChange);
     var startDateInput = document.querySelector("#start-date-search");
-    if (startDateInput !== null) {
-        startDateInput.addEventListener("change", startDateChange);
-    }
+    startDateInput.addEventListener("change", startDateChange);
     var endDateInput = document.querySelector("#end-date-search");
-    if (endDateInput !== null) {
-        endDateInput.addEventListener("change", endDateChange);
-    }
+    endDateInput.addEventListener("change", endDateChange);
     transactionCards = document.querySelectorAll("[data-transaction-card]");
+    sumAmountElement =
+        document.querySelector("span#sum-amount");
+    sumBox = document.querySelector("div#sum-box");
+    runUpdates();
+}
+function runUpdates() {
+    filterCards();
+    sumAmountElement.innerText = sumAmount.toString();
+    if (sumAmount > 0) {
+        sumBox.classList.add("text-warning");
+        sumBox.classList.remove("text-red-800");
+    }
+    else {
+        sumBox.classList.add("text-red-800");
+        sumBox.classList.remove("text-warning");
+    }
 }
 function filterCards() {
+    sumAmount = 0;
     for (var i = 0; i < transactionCards.length; i++) {
         var transactionCard = transactionCards[i];
         if (!(transactionCard instanceof HTMLElement)) {
@@ -56,6 +66,7 @@ function filterCards() {
         }
         if (cardMatches(transactionCard)) {
             transactionCard.classList.remove("hide-card");
+            sumAmount += parseInt(transactionCard.dataset.amount);
         }
         else {
             transactionCard.classList.add("hide-card");
@@ -139,7 +150,7 @@ function descriptionChange() {
     if (inputValues.description.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 function minAmountChange() {
     var _a;
@@ -155,7 +166,7 @@ function minAmountChange() {
     if (inputValues.minAmount.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 function maxAmountChange() {
     var _a;
@@ -171,7 +182,7 @@ function maxAmountChange() {
     if (inputValues.maxAmount.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 function startDateChange() {
     var startDateElement = document.querySelector("#start-date-search");
@@ -189,7 +200,7 @@ function startDateChange() {
     if (inputValues.startDate.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 function endDateChange() {
     var endDateElement = document.querySelector("#start-date-search");
@@ -207,7 +218,7 @@ function endDateChange() {
     if (inputValues.endDate.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 function clearInputValues() {
     var descriptionSearchElement = document.querySelector("#description-search");
