@@ -8,24 +8,6 @@ import (
 	"transactionsui/internal/models"
 )
 
-func codeHandler(w http.ResponseWriter, r *http.Request) {
-	db := dbhandler.New()
-	q := database.New(db.DB)
-	codes, err := q.GetTransactionCodes(r.Context())
-	if err != nil {
-		log.Fatal(err)
-	}
-	type PageData struct {
-		Title string
-		Codes []database.TranCode
-	}
-	data := PageData{
-		Title: "Hello",
-		Codes: codes,
-	}
-	tmpl.Execute(w, data)
-}
-
 func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 	db := dbhandler.New()
 	q := database.New(db.DB)
@@ -34,6 +16,9 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	transactions, err := q.GetAllTransactions(r.Context())
+	if err != nil {
+		log.Fatal(err)
+	}
 	txData := models.DatabaseTransactionsToTxData(
 		transactions,
 		aliases,
