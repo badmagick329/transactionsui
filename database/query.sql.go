@@ -53,6 +53,7 @@ SELECT
   t.id as transactions_id,
   t.date as date,
   t.amount,
+  t.is_positive,
   tc.code,
   d.description_text
 FROM
@@ -69,6 +70,7 @@ type GetAllTransactionsRow struct {
 	TransactionsID  int64
 	Date            sql.NullString
 	Amount          sql.NullFloat64
+	IsPositive      sql.NullBool
 	Code            sql.NullString
 	DescriptionText sql.NullString
 }
@@ -86,6 +88,7 @@ func (q *Queries) GetAllTransactions(ctx context.Context) ([]GetAllTransactionsR
 			&i.TransactionsID,
 			&i.Date,
 			&i.Amount,
+			&i.IsPositive,
 			&i.Code,
 			&i.DescriptionText,
 		); err != nil {
