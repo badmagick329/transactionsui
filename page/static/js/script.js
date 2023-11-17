@@ -40,11 +40,11 @@ function main() {
     }
     var startDateInput = document.querySelector("#start-date-search");
     if (startDateInput !== null) {
-        startDateInput.addEventListener("keyup", startDateChange);
+        startDateInput.addEventListener("change", startDateChange);
     }
     var endDateInput = document.querySelector("#end-date-search");
     if (endDateInput !== null) {
-        endDateInput.addEventListener("keyup", endDateChange);
+        endDateInput.addEventListener("change", endDateChange);
     }
     transactionCards = document.querySelectorAll("[data-transaction-card]");
 }

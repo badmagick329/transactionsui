@@ -64,12 +64,12 @@ function main() {
     const startDateInput =
         document.querySelector<HTMLInputElement>("#start-date-search");
     if (startDateInput !== null) {
-        startDateInput.addEventListener("keyup", startDateChange);
+        startDateInput.addEventListener("change", startDateChange);
     }
     const endDateInput =
         document.querySelector<HTMLInputElement>("#end-date-search");
     if (endDateInput !== null) {
-        endDateInput.addEventListener("keyup", endDateChange);
+        endDateInput.addEventListener("change", endDateChange);
     }
     transactionCards = document.querySelectorAll("[data-transaction-card]");
 }

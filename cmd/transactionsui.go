@@ -18,6 +18,7 @@ func Execute() {
 
 	staticFiles := http.FileServer(http.Dir("./page/static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", staticFiles))
+	log.Println("Listening on :8001...")
 	log.Fatal(http.ListenAndServe(":8001", mux))
 }
 

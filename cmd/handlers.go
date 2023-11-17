@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"transactionsui/database"
 	"transactionsui/internal/dbhandler"
-	"transactionsui/internal/utils"
+	"transactionsui/internal/models"
 )
 
 func codeHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,17 +34,16 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	transactions, err := q.GetAllTransactions(r.Context())
-	txData := utils.FixAmounts(transactions)
-	utils.AttachAliases(txData, aliases)
-	if err != nil {
-		log.Fatal(err)
-	}
+	txData := models.DatabaseTransactionsToTxData(
+		transactions,
+		aliases,
+	)
 	type PageData struct {
 		Title        string
-		Transactions []utils.TransactionData
+		Transactions []models.TxData
 	}
 	data := PageData{
-		Title:        "Hello",
+		Title:        "Transactions",
 		Transactions: txData,
 	}
 	tmpl.Execute(w, data)

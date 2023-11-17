@@ -23,6 +23,7 @@ SELECT
   t.id as transactions_id,
   t.date as date,
   t.amount,
+  t.is_positive,
   tc.code,
   d.description_text
 FROM
