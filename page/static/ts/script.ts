@@ -27,6 +27,9 @@ interface InputMatches {
 }
 
 let transactionCards: NodeListOf<Element>;
+let sumBox: HTMLDivElement;
+let sumAmountElement: HTMLSpanElement;
+let sumAmount: number = 0;
 
 let inputValues: InputValues = {
     description: { text: "", num: 0, none: true },
@@ -46,35 +49,42 @@ let inputMatches: InputMatches = {
 
 function main() {
     const minAmountInput =
-        document.querySelector<HTMLInputElement>("#min-amount-search");
-    if (minAmountInput !== null) {
-        minAmountInput.addEventListener("keyup", minAmountChange);
-    }
+        document.querySelector<HTMLInputElement>("#min-amount-search")!;
+    minAmountInput.addEventListener("keyup", minAmountChange);
     const maxAmountInput =
-        document.querySelector<HTMLInputElement>("#max-amount-search");
-    if (maxAmountInput !== null) {
-        maxAmountInput.addEventListener("keyup", maxAmountChange);
-    }
+        document.querySelector<HTMLInputElement>("#max-amount-search")!;
+    maxAmountInput.addEventListener("keyup", maxAmountChange);
     const descriptionInput = document.querySelector<HTMLInputElement>(
         "#description-search"
-    );
-    if (descriptionInput !== null) {
-        descriptionInput.addEventListener("keyup", descriptionChange);
-    }
+    )!;
+    descriptionInput.addEventListener("keyup", descriptionChange);
     const startDateInput =
-        document.querySelector<HTMLInputElement>("#start-date-search");
-    if (startDateInput !== null) {
-        startDateInput.addEventListener("change", startDateChange);
-    }
+        document.querySelector<HTMLInputElement>("#start-date-search")!;
+    startDateInput.addEventListener("change", startDateChange);
     const endDateInput =
-        document.querySelector<HTMLInputElement>("#end-date-search");
-    if (endDateInput !== null) {
-        endDateInput.addEventListener("change", endDateChange);
-    }
+        document.querySelector<HTMLInputElement>("#end-date-search")!;
+    endDateInput.addEventListener("change", endDateChange)!;
     transactionCards = document.querySelectorAll("[data-transaction-card]");
+    sumAmountElement =
+        document.querySelector<HTMLSpanElement>("span#sum-amount")!;
+    sumBox = document.querySelector<HTMLDivElement>("div#sum-box")!;
+    runUpdates();
+}
+
+function runUpdates() {
+    filterCards();
+    sumAmountElement.innerText = sumAmount.toString();
+    if (sumAmount > 0) {
+        sumBox.classList.add("text-warning");
+        sumBox.classList.remove("text-red-800");
+    } else {
+        sumBox.classList.add("text-red-800");
+        sumBox.classList.remove("text-warning");
+    }
 }
 
 function filterCards() {
+    sumAmount = 0;
     for (let i = 0; i < transactionCards.length; i++) {
         const transactionCard = transactionCards[i];
         if (!(transactionCard instanceof HTMLElement)) {
@@ -82,6 +92,7 @@ function filterCards() {
         }
         if (cardMatches(transactionCard)) {
             transactionCard.classList.remove("hide-card");
+            sumAmount += parseInt(transactionCard.dataset.amount!);
         } else {
             transactionCard.classList.add("hide-card");
         }
@@ -199,7 +210,7 @@ function descriptionChange() {
     if (inputValues.description.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 
 function minAmountChange() {
@@ -215,7 +226,7 @@ function minAmountChange() {
     if (inputValues.minAmount.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 
 function maxAmountChange() {
@@ -231,7 +242,7 @@ function maxAmountChange() {
     if (inputValues.maxAmount.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 
 function startDateChange() {
@@ -250,7 +261,7 @@ function startDateChange() {
     if (inputValues.startDate.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 
 function endDateChange() {
@@ -269,7 +280,7 @@ function endDateChange() {
     if (inputValues.endDate.none) {
         return;
     }
-    filterCards();
+    runUpdates();
 }
 
 function clearInputValues() {
